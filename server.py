@@ -1,5 +1,6 @@
 #  coding: utf-8 
 import SocketServer
+import os
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
@@ -28,11 +29,55 @@ import SocketServer
 
 
 class MyWebServer(SocketServer.BaseRequestHandler):
+
+
+
+    #initialize response
+    response=""
+#first define all the functions we need first
+
+    #check if our request is GET type
+    #http_request -> ['GET', '/', 'HTTP/1.1']
+    def check_get(self,http_request):
+        if http_request==3:          
+            if http_request[0]=='GET':
+                return True
+            else:
+                return False
+            
+    #check the path of file and directory
+    def check_file(self,path):
+        if (os.path.isfile(path)) and (os.path.isdir(path)):
+            return True
+        else:
+            return False
+
+
+    #handle status code
+    def code_200(file_type,path):
+        self.response =("HTTP/1.1 200 OK \n File Type: "+file_type+"\n\n"+open(path).read())
+
+    def error_404(self,response):
+        self.response = ("HTTP/1.1 404 Not Found\n")
+        
+    def error_501(self,response):
+        self.response = ("HTTP/1.1 501 Not Implemented\n")
     
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
+        #print ("Got a request of: %s\n" % self.data)
+        header = self.data.splitlines()[0]   #should return similar to "GET / HTTP/1.1" 
+        http_request = header.split()        #should return something like ['GET', '/', 'HTTP/1.1']
+
+
+        print(header.split())
+        print('\n')
+        print(self.data)
         self.request.sendall("OK")
+
+
+ 
+
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
