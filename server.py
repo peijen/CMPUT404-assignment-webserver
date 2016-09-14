@@ -2,7 +2,7 @@
 import SocketServer
 import os
 
-# Copyright 2013 Abram Hindle, Eddie Antonio Santos
+# Copyright 2013 Abram Hindle, Eddie Antonio Santos, Chris Lin
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -60,14 +60,14 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 	
         header = self.data.splitlines()[0]   #should return similar to "GET / HTTP/1.1" 
         http_request = header.split()        #should return something like ['GET', '/', 'HTTP/1.1']
-	#print(http_request[0])
+	
 	
 	#call check_get function and find its absolute path
         if self.checkget(http_request)== True:
             getdata = http_request[1]
             path = os.path.abspath("www"+getdata)
             
-	    
+	    #check if the path is a file
             if (os.path.isfile(path)) == True:
 		file_type = path.split('.')[-1]
 		if (file_type =='css'):
@@ -80,7 +80,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 		    self.code_200(file_type,path)
 		else:
 		    self.error_404(self.response)
-		
+	    #chekc if the path is a directory and open up html if exist
 	    elif(os.path.isdir(path)) == True:
 		path += "/index.html"
 		if (os.path.isfile(path)):
@@ -90,9 +90,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
                 self.error_404(self.response)
 	else:
 	    self.error_501(self.response)
-        #print(header.split())
-        #print('\n')
-        #print(self.data)
+      
         self.request.sendall(self.response)
 
    
