@@ -29,54 +29,77 @@ import os
 
 
 class MyWebServer(SocketServer.BaseRequestHandler):
-
+ 
 
 
     #initialize response
     response=""
-#first define all the functions we need first
 
     #check if our request is GET type
     #http_request -> ['GET', '/', 'HTTP/1.1']
-    def check_get(self,http_request):
-        if http_request==3:          
-            if http_request[0]=='GET':
-                return True
-            else:
-                return False
-            
-    #check the path of file and directory
-    def check_file(self,path):
-        if (os.path.isfile(path)) and (os.path.isdir(path)):
+    def checkget(self,http_request):
+        if len(http_request)==3 and http_request[0]=='GET':          
             return True
         else:
             return False
 
-
     #handle status code
-    def code_200(file_type,path):
-        self.response =("HTTP/1.1 200 OK \n File Type: "+file_type+"\n\n"+open(path).read())
+    def code_200(self,file_type,path):
+        print(path)
+        self.response +=("HTTP/1.1 200 OK \n File Type: "+file_type+"\n\n"+open(path).read())
 
     def error_404(self,response):
-        self.response = ("HTTP/1.1 404 Not Found\n")
-        
+        self.response += ("HTTP/1.1 404 Not Found, Nothing matches the given URI\r\n"
+                          "Connection: close\r\n"
+                          "File-Type: text/html\n\n"
+                          "<!DOCTYPE html>\n"
+                          "<html><body><h1>HTTP/1.1 404 Not Found, The page is missing "
+                          "</h1></body></html>")
+     Not Found, Nothing matches the given URI
+
     def error_501(self,response):
-        self.response = ("HTTP/1.1 501 Not Implemented\n")
-    
+        self.response += ("HTTP/1.1 501 Not Implemented\n"+
+                          "File-Type text/html\n\n"+
+                          "<!DOCTYPE html>\n"+
+                          "<html><body>HTTP/1.1 501 Not Implemented\n\n"+
+                          "Server does not support this operation.</body></html>")
+  
+
     def handle(self):
         self.data = self.request.recv(1024).strip()
         #print ("Got a request of: %s\n" % self.data)
+
         header = self.data.splitlines()[0]   #should return similar to "GET / HTTP/1.1" 
         http_request = header.split()        #should return something like ['GET', '/', 'HTTP/1.1']
+        print(http_request[0])
 
+        #call check_get function and find its absolute path
+        if self.checkget(http_request)== True:
+            getdata = http_request[1]
+            path = os.path.abspath("www"+getdata)
+            print("THE PATH IS",path)
+            
+            #check if file exist in the path
+            if (os.path.isfile(path)) == True:
+                file_type = path.split('.')[-1]
+                if (file_type =="css" or file_type=='html'):
+                    page_type ="text/"+file_type
+                    self.code_200(page_type,path)
+                else:
+                    self.error_404(self.response)
 
-        print(header.split())
-        print('\n')
-        print(self.data)
-        self.request.sendall("OK")
-
-
- 
+            elif(os.path.isdir(path)) == True:
+                path += "/index.html"
+                print("directory exist",path)
+                if (os.path.isfile(path)):
+                    file_type = "text/html\n\n"
+                    self.code_200(file_type,path)
+            else:
+                self.error_404(self.response)
+        else:
+            self.error_501(self.response)
+        print(self.response)
+        self.request.sendall(self.response)
 
 
 if __name__ == "__main__":
