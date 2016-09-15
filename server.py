@@ -48,7 +48,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
     def error_404(self,response):
         self.response += ("HTTP/1.1 404 Not Found\r\n"
                           "Connection: close\r\n"
-                          "Content-Type: text/html\n\n")
+                          "Content-Type: text/plain\n\n")
         
     def error_501(self,response):
         self.response += ("HTTP/1.1 501 Not Implemented\n"+
